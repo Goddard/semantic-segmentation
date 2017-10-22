@@ -60,29 +60,104 @@ def load_graph(graph_file, use_xla=False):
         n_ops = len(ops)
         return sess, sess.graph, ops
 
-def run_frozen():
-    runs_dir = './runs'
-    data_dir = './data'
-    save_path = os.path.join(runs_dir, '')
+def save_graph(sess, save_path, saver):
+    # Save GraphDef
+    tf.train.write_graph(sess.graph_def, '.', 'graph.pb')
+    # Save checkpoint
+    saver.save(sess=sess, save_path="test_model")
+
+def run_optimized(runs_dir, data_dir):
+    save_path = os.path.join(runs_dir, 'graph_optimized.pb')
+
+    with tf.gfile.GFile(save_path, 'rb') as f:
+        graph_def_optimized = tf.GraphDef()
+        graph_def_optimized.ParseFromString(f.read())
+
+    graph = tf.Graph()
+
+    with tf.Session(graph=graph) as sess:
+        # y, = tf.import_graph_def(graph_def_optimized, return_elements=['y:0'])
+        print('Operations in Optimized Graph:')
+        print([op.name for op in graph.get_operations()])
+
+        video_path = os.path.join(data_dir, 'driving.mp4')
+
+        # 640 368
+        up_s_vid_size = (1280, 720)
+        down_s_vid_size = (576, 160)
+        # video_size = (576, 160) #736 720 1280, 736
+
+        # graph_file = './runs/frozen_model.pb'
+        # sess, graph, ops = load_graph(graph_file)
+        # for i in ops:
+        #     print(i.name)
+
+        image_input = graph.get_tensor_by_name('image_input:0')
+        keep_prob = graph.get_tensor_by_name('keep_prob:0')
+        # output_layer = graph.get_tensor_by_name('my_output/conv2d_transpose:0')
+
+        # second_output_layer = graph.get_tensor_by_name('my_second_output:0')
+        my_logits = graph.get_tensor_by_name('my_logits:0')
+
+        # logits = tf.reshape(output_layer, (-1, 2))
+
+        tf.global_variables_initializer().run()
+
+        cap = cv2.VideoCapture(video_path)
+        while not cap.isOpened():
+            cap = cv2.VideoCapture(video_path)
+            cv2.waitKey(1000)
+            print("Wait for the header")
+
+        pos_frame = cap.get(cv2.CAP_PROP_POS_FRAMES)
+        while True:
+            flag, frame = cap.read()
+            if flag:
+                # The frame is ready and already captured
+                image = cv2.resize(frame, down_s_vid_size, interpolation=cv2.INTER_LINEAR)
+                image = helper.test_video(sess, my_logits, keep_prob, image_input, image, down_s_vid_size,
+                                          up_s_vid_size)
+                image = cv2.resize(image, up_s_vid_size, interpolation=cv2.INTER_LINEAR)
+
+                cv2.imshow('video', image)
+                pos_frame = cap.get(cv2.CAP_PROP_POS_FRAMES)
+                print(str(pos_frame) + " frames")
+            else:
+                # The next frame is not ready, so we try to read it again
+                cap.set(cv2.CAP_PROP_POS_FRAMES, pos_frame - 1)
+                print("frame is not ready")
+                # It is better to wait for a while for the next frame to be ready
+                cv2.waitKey(1000)
+
+            if cv2.waitKey(10) == 27:
+                break
+            if cap.get(cv2.CAP_PROP_POS_FRAMES) == cap.get(cv2.CAP_PROP_FRAME_COUNT):
+                # If the number of captured frames is equal to the total number of frames,
+                # we stop
+                break
+
+
+def run_frozen(runs_dir, data_dir):
+    save_path = os.path.join(runs_dir, 'frozen_model.pb')
     video_path = os.path.join(data_dir, 'driving.mp4')
 
     # 640 368
-    video_size = (1280, 736)  # 736 720
-    # keep_prob = 0.3
+    up_s_vid_size = (1280, 720)
+    down_s_vid_size = (576, 160)
+    # video_size = (576, 160) #736 720 1280, 736
 
-    graph_file = './runs/frozen_model.pb'
-    sess, graph, ops = load_graph(graph_file)
+    sess, graph, ops = load_graph(save_path)
     # for i in ops:
     #     print(i.name)
 
     image_input = graph.get_tensor_by_name('image_input:0')
-    probabilities = graph.get_tensor_by_name('keep_prob:0')
-    output_layer = graph.get_tensor_by_name('my_output/conv2d_transpose:0')
+    keep_prob = graph.get_tensor_by_name('keep_prob:0')
+    # output_layer = graph.get_tensor_by_name('my_output/conv2d_transpose:0')
 
     # second_output_layer = graph.get_tensor_by_name('my_second_output:0')
-    # my_logits = graph.get_tensor_by_name('my_logits:0')
+    my_logits = graph.get_tensor_by_name('my_logits:0')
 
-    logits = tf.reshape(output_layer, (-1, 2))
+    # logits = tf.reshape(output_layer, (-1, 2))
 
     cap = cv2.VideoCapture(video_path)
     while not cap.isOpened():
@@ -95,7 +170,10 @@ def run_frozen():
         flag, frame = cap.read()
         if flag:
             # The frame is ready and already captured
-            image = helper.test_video(sess, logits, probabilities, image_input, frame, video_size)
+            image = cv2.resize(frame, down_s_vid_size, interpolation=cv2.INTER_LINEAR)
+            image = helper.test_video(sess, my_logits, keep_prob, image_input, image, down_s_vid_size, up_s_vid_size)
+            image = cv2.resize(image, up_s_vid_size, interpolation=cv2.INTER_LINEAR)
+
             cv2.imshow('video', image)
             pos_frame = cap.get(cv2.CAP_PROP_POS_FRAMES)
             print(str(pos_frame) + " frames")
@@ -113,15 +191,15 @@ def run_frozen():
             # we stop
             break
 
-def run_normal():
+def run_normal(runs_dir, data_dir):
     with tf.Session() as sess:
-        runs_dir = './runs'
-        data_dir = './data'
         save_path = os.path.join(runs_dir, '')
         video_path = os.path.join(data_dir, 'driving.mp4')
 
         # 640 368
-        video_size = (1280, 736) #736 720
+        up_s_vid_size = (1280, 720)
+        down_s_vid_size = (576, 160) # (288, 80)
+        # video_size = (576, 160) #736 720 1280, 736
 
         model_saver = tf.train.import_meta_graph(save_path + 'model.ckpt.meta')
         model_saver.restore(sess, tf.train.latest_checkpoint(save_path + ''))
@@ -129,14 +207,16 @@ def run_normal():
         graph = tf.get_default_graph()
         image_input = graph.get_tensor_by_name('image_input:0')
         keep_prob = graph.get_tensor_by_name('keep_prob:0')
-        output_layer = graph.get_tensor_by_name('my_output/conv2d_transpose:0')
-        second_output_layer = graph.get_tensor_by_name('my_second_output:0')
+        # output_layer = graph.get_tensor_by_name('my_output/conv2d_transpose:0')
+        # optimizer = graph.get_tensor_by_name('my_optimizer:0')
+        # second_output_layer = graph.get_tensor_by_name('my_second_output:0')
         my_logits = graph.get_tensor_by_name('my_logits:0')
+        # softmax_logits = graph.get_tensor_by_name('SoftmaxCrossEntropyWithLogits:0')
 
-        logits = tf.reshape(output_layer, (-1, 2))
+        # logits = tf.reshape(output_layer, (-1, 2))
 
-        for i in tf.get_default_graph().get_operations():
-            print(i.name)
+        # for i in tf.get_default_graph().get_operations():
+        #     print(i.name)
 
         cap = cv2.VideoCapture(video_path)
         while not cap.isOpened():
@@ -149,7 +229,10 @@ def run_normal():
             flag, frame = cap.read()
             if flag:
                 # The frame is ready and already captured
-                image = helper.test_video(sess, logits, keep_prob, image_input, frame, video_size)
+                image = cv2.resize(frame, down_s_vid_size, interpolation=cv2.INTER_LINEAR)
+                image = helper.test_video(sess, my_logits, keep_prob, image_input, image, down_s_vid_size, up_s_vid_size)
+                image = cv2.resize(image, up_s_vid_size, interpolation = cv2.INTER_LINEAR)
+
                 cv2.imshow('video', image)
                 pos_frame = cap.get(cv2.CAP_PROP_POS_FRAMES)
                 print(str(pos_frame) + " frames")
@@ -169,9 +252,21 @@ def run_normal():
                 break
 
 def run():
-    # freeze.freeze_graph('./runs', "image_input,keep_prob,my_output/conv2d_transpose")
+    normal_runs_dir = os.path.join('./runs/normal', '')
+    freeze_runs_dir = os.path.join('./runs/freeze', '')
+    optimize_runs_dir = os.path.join('./runs/optimize', '')
+    data_dir = './data'
 
-    run_normal()
+    # refreeze graph if I retrain the model
+    freeze.freeze_graph(normal_runs_dir, "image_input,keep_prob,my_logits") # ,my_output/conv2d_transpose
+
+    # runs but still slow and doesn't detect well
+    run_normal(normal_runs_dir, data_dir)
+
+    # crashes program and runs much slower
+    # run_frozen(freeze_runs_dir, data_dir)
+
+    # run_optimized(optimize_runs_dir, data_dir)
 
 if __name__ == '__main__':
     run()

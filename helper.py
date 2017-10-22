@@ -13,8 +13,9 @@ from tqdm import tqdm
 
 import cv2
 
-from moviepy.editor import VideoFileClip
-
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
 
 class DLProgress(tqdm):
     last_block = 0
@@ -101,15 +102,12 @@ def gen_batch_function(data_folder, image_shape):
             yield np.array(images), np.array(gt_images)
     return get_batches_fn
 
-def test_video(sess, logits, keep_prob, input_image, clip, image_shape): #test_image
-    # image = scipy.misc.imresize(scipy.misc.imread(test_image), image_shape)
-    image = cv2.resize(clip, image_shape, interpolation=cv2.INTER_LINEAR)
+def test_video(sess, logits, keep_prob, input_image, clip, image_shape, up_scale_size): #test_image
+    image = clip
 
-    im_softmax = sess.run(
-        [tf.nn.softmax(logits)],
-        {keep_prob: 1.0, input_image: [image]})
-    im_softmax = im_softmax[0][:, 1].reshape(image_shape[0], image_shape[1])
-    segmentation = (im_softmax > 0.5).reshape(image_shape[0], image_shape[1], 1)
+    im_softmax = sess.run([tf.nn.softmax(logits)], {keep_prob: 0.6, input_image: [image]})
+    im_softmax = im_softmax[0][:, 1].reshape(image_shape[1], image_shape[0])
+    segmentation = (im_softmax > 0.5).reshape(image_shape[1], image_shape[0], 1)
     mask = np.dot(segmentation, np.array([[0, 255, 0, 127]]))
     mask = scipy.misc.toimage(mask, mode="RGBA")
     street_im = scipy.misc.toimage(image)
@@ -157,3 +155,25 @@ def save_inference_samples(runs_dir, data_dir, sess, image_shape, logits, keep_p
         sess, logits, keep_prob, input_image, os.path.join(data_dir, 'data_road/testing'), image_shape)
     for name, image in image_outputs:
         scipy.misc.imsave(os.path.join(output_dir, name), image)
+
+def plot_loss(runs_dir, loss):
+    _, axes = plt.subplots()
+    plt.plot(range(0, len(loss)), loss)
+    plt.title('Cross-entropy loss')
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss')
+    plt.grid()
+    #axes.xaxis.set_major_locator(ticker.MultipleLocator(1))
+    output_file = os.path.join(runs_dir, str(time.time()) + ".png")
+    plt.savefig(output_file)
+
+def print_num_params(graph):
+  vvars = 0
+  for v in tf.global_variables():
+    vvars += np.prod(v.get_shape().as_list())
+  total_parameters = 0
+  for v in tf.trainable_variables():
+    total_parameters += np.prod(v.get_shape().as_list())
+  print('Total params = %i' % (total_parameters))
+  print('Total vars = %i' % (vvars))
+  print('Total ops = %i' % (len(graph.get_operations())))
