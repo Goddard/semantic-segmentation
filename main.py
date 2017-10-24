@@ -7,7 +7,6 @@ import warnings
 from distutils.version import LooseVersion
 import project_tests as tests
 
-
 # Check TensorFlow Version
 assert LooseVersion(tf.__version__) >= LooseVersion('1.0'), 'Please use TensorFlow version 1.0 or newer.  You are using {}'.format(tf.__version__)
 print('TensorFlow Version: {}'.format(tf.__version__))
@@ -100,8 +99,8 @@ def layers(vgg_layer3_out, vgg_layer4_out, vgg_layer7_out, num_classes):
     output = tf.add(output, vgg_layer3_out)
     # upscale / reduce features
     output = tf.layers.conv2d_transpose(output, num_classes, 16, strides=(8, 8), padding='same',
-                                        kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3),
-                                        kernel_initializer=kernel_initializer)
+                                        kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
+    # , kernel_initializer = kernel_initializer
 
     return output
 tests.test_layers(layers)
@@ -169,7 +168,6 @@ def train_nn(sess, epochs, batch_size, get_batches_fn, train_op, cross_entropy_l
         loss_log.append(epoch_loss / batch_count)
 
     return loss_log
-
 tests.test_train_nn(train_nn)
 
 
@@ -179,7 +177,6 @@ def run():
     data_dir = './data'
     runs_dir = './runs'
     model_runs_dir = './runs/normal'
-    model_pb_runs_dir = './runs/normal_pb'
     tests.test_for_kitti_dataset(data_dir)
 
     # Download pretrained vgg model
@@ -188,16 +185,16 @@ def run():
     # OPTIONAL: Train and Inference on the cityscapes dataset instead of the Kitti dataset.
     # You'll need a GPU with at least 10 teraFLOPS to train on.
     #  https://www.cityscapes-dataset.com/
-    epochs = 18
-    batch_size = 8
+    epochs = 15
+    batch_size = 5
 
     # Create a TensorFlow configuration object. This will be
     # passed as an argument to the session.
     config = tf.ConfigProto()
 
     # JIT level, this can be set to ON_1 or ON_2
-    jit_level = tf.OptimizerOptions.ON_1
-    config.graph_options.optimizer_options.global_jit_level = jit_level
+    # jit_level = tf.OptimizerOptions.ON_1
+    # config.graph_options.optimizer_options.global_jit_level = jit_level
 
     with tf.Session(config=config) as sess:
         # Path to vgg model
@@ -226,10 +223,10 @@ def run():
         # exit()
 
         # DONE: Save inference data using helper.save_inference_samples
-        helper.save_inference_samples(runs_dir, data_dir, sess, image_shape, logits, keep_prob, input_image)
+        folder_name = helper.save_inference_samples(model_runs_dir, data_dir, sess, image_shape, logits, keep_prob, input_image)
 
         # Plot loss
-        helper.plot_loss(runs_dir, loss_log)
+        helper.plot_loss(model_runs_dir, loss_log, folder_name)
 
         # OPTIONAL: Apply the trained model to a video
         saver = tf.train.Saver(tf.trainable_variables())
@@ -237,14 +234,6 @@ def run():
         saver.save(sess, save_path)
         print('Saved normal at : {}'.format(save_path))
 
-        save_path_pb = os.path.join(model_pb_runs_dir, 'graph.pb')
-        save_path_pb_model = os.path.join(model_pb_runs_dir, 'test_model')
-
-        # Save GraphDef
-        tf.train.write_graph(sess.graph_def, '.', save_path_pb)
-        # Save checkpoint
-        saver.save(sess=sess, save_path=save_path_pb_model)
-        print('Saved normal pb at : {}'.format(save_path_pb))
 
 if __name__ == '__main__':
     run()

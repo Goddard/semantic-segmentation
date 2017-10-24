@@ -143,8 +143,9 @@ def gen_test_output(sess, logits, keep_prob, image_pl, data_folder, image_shape)
 
 
 def save_inference_samples(runs_dir, data_dir, sess, image_shape, logits, keep_prob, input_image):
+    folder_name = str(time.time())
     # Make folder for current run
-    output_dir = os.path.join(runs_dir, str(time.time()))
+    output_dir = os.path.join(runs_dir, folder_name)
     if os.path.exists(output_dir):
         shutil.rmtree(output_dir)
     os.makedirs(output_dir)
@@ -156,15 +157,17 @@ def save_inference_samples(runs_dir, data_dir, sess, image_shape, logits, keep_p
     for name, image in image_outputs:
         scipy.misc.imsave(os.path.join(output_dir, name), image)
 
-def plot_loss(runs_dir, loss):
+    return folder_name
+
+def plot_loss(runs_dir, loss, folder_name):
     _, axes = plt.subplots()
     plt.plot(range(0, len(loss)), loss)
     plt.title('Cross-entropy loss')
     plt.xlabel('Epoch')
     plt.ylabel('Loss')
     plt.grid()
-    #axes.xaxis.set_major_locator(ticker.MultipleLocator(1))
-    output_file = os.path.join(runs_dir, str(time.time()) + ".png")
+
+    output_file = os.path.join(runs_dir, folder_name + ".png")
     plt.savefig(output_file)
 
 def print_num_params(graph):

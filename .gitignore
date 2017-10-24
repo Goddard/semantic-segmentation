@@ -103,7 +103,7 @@ ENV/
 # mypy
 .mypy_cache/
 
-runs/
-data/
+#runs/
+#data/
 
 .directory
