@@ -8,22 +8,6 @@ from scipy.misc import imread, imresize
 from glob import glob
 
 FLAGS = None
-# def load_graph(graph_file, use_xla=False):
-#     jit_level = 0
-#     config = tf.ConfigProto()
-#     if use_xla:
-#         jit_level = tf.OptimizerOptions.ON_1
-#         config.graph_options.optimizer_options.global_jit_level = jit_level
-#
-#     with tf.Session(graph=tf.Graph(), config=config) as sess:
-#         gd = tf.GraphDef()
-#         with tf.gfile.Open(graph_file, 'rb') as f:
-#             data = f.read()
-#             gd.ParseFromString(data)
-#         tf.import_graph_def(gd, name='')
-#         ops = sess.graph.get_operations()
-#         n_ops = len(ops)
-#         return sess, sess.graph, ops
 
 def load_graph(graph_file, use_xla=False):
     config = tf.ConfigProto()
@@ -37,9 +21,9 @@ def load_graph(graph_file, use_xla=False):
             data = f.read()
             gd.ParseFromString(data)
         tf.import_graph_def(gd, name='')
-        ops = sess.graph.get_operations()
-        n_ops = len(ops)
-        return sess, ops
+        # ops = sess.graph.get_operations()
+        # n_ops = len(ops)
+        return sess #, ops
 
 # images are (375, 1242, 3)
 # need to reshape to (380, 1242, 3) or else we get off by 1 for some operations

@@ -191,10 +191,11 @@ def run():
     # Create a TensorFlow configuration object. This will be
     # passed as an argument to the session.
     config = tf.ConfigProto()
+    config.gpu_options.allocator_type = 'BFC'
 
     # JIT level, this can be set to ON_1 or ON_2
-    # jit_level = tf.OptimizerOptions.ON_1
-    # config.graph_options.optimizer_options.global_jit_level = jit_level
+    jit_level = tf.OptimizerOptions.ON_1
+    config.graph_options.optimizer_options.global_jit_level = jit_level
 
     with tf.Session(config=config) as sess:
         # Path to vgg model
@@ -229,9 +230,16 @@ def run():
         helper.plot_loss(model_runs_dir, loss_log, folder_name)
 
         # OPTIONAL: Apply the trained model to a video
+        save_path = os.path.join(model_runs_dir, 'model')
+        save_path_pb = os.path.join(model_runs_dir, 'model.pb')
+
         saver = tf.train.Saver(tf.trainable_variables())
-        save_path = os.path.join(model_runs_dir, 'model.ckpt')
+        saver_def = saver.as_saver_def()
+        print(saver_def.filename_tensor_name)
+        print(saver_def.restore_op_name)
+
         saver.save(sess, save_path)
+        tf.train.write_graph(sess.graph_def, '.', save_path_pb, as_text=False)
         print('Saved normal at : {}'.format(save_path))
 
 
