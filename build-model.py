@@ -1,7 +1,4 @@
 import subprocess
-import os
-
-import tensorflow.tools.graph_transforms
 
 def run_command(cmd):
     p = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True)
@@ -11,7 +8,6 @@ def run_command(cmd):
         if not lin.startswith(b'#'):
             print(lin)
 
-# os.system(
 run_command("$HOME/Libraries/TensorFlow/tensorflow/bazel-bin/tensorflow/tools/graph_transforms/summarize_graph --in_graph=./runs/normal_pb/model.pb")
 
 run_command('python -m tensorflow.python.tools.freeze_graph --input_graph=./runs/normal_pb/model.pb --input_binary=true --input_checkpoint=./runs/normal/model.ckpt --output_graph=./runs/freeze/model.pb --output_node_names=my_logits')
