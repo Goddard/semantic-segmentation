@@ -9,12 +9,12 @@ def run_command(cmd):
             print(lin)
 
 run_command("summarize_graph --in_graph=./runs/normal/model.pb")
-run_command("benchmark_model "
-            "--input_layer='image_input:0' "
-            "--graph=./runs/normal/model.pb "
-            "--show_flops=true "
-            "--show_summary=true "
-            "--input_layer=image_input")
+# run_command("benchmark_model "
+#             "--input_layer='image_input:0' "
+#             "--graph=./runs/normal/model.pb "
+#             "--show_flops=true "
+#             "--show_summary=true "
+#             "--input_layer=image_input")
 
 run_command('python -m tensorflow.python.tools.freeze_graph '
             '--input_graph=./runs/normal/model.pb '
@@ -87,10 +87,10 @@ eight_bit_input_graph = './runs/eight_bit/model.pb'
 eight_bit_output_dot = './runs/eight_bit/graph.dot'
 convert_graph_to_dot(input_graph=eight_bit_input_graph, output_dot=eight_bit_output_dot, is_input_graph_binary=True)
 
-normal_dot_to_png = "dot -O -T png " + normal_output_dot
-print(normal_dot_to_png)
-run_command(normal_dot_to_png) # + " -o " + normal_pb_output_dot + ".png > /tmp/a.out"
-print("normal pb graph png created")
+# normal_dot_to_png = "dot -O -T png " + normal_output_dot
+# print(normal_dot_to_png)
+# run_command(normal_dot_to_png) # + " -o " + normal_pb_output_dot + ".png > /tmp/a.out"
+# print("normal pb graph png created")
 
 freeze_dot_to_png = "dot -O -T png " + freeze_output_dot
 print(freeze_dot_to_png)

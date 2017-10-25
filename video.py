@@ -94,7 +94,7 @@ def run_normal(runs_dir):
         save_path = os.path.join(runs_dir, '')
         data_dir = './data'
 
-        model_saver = tf.train.import_meta_graph(save_path + 'model.ckpt.meta')
+        model_saver = tf.train.import_meta_graph(save_path + 'model.meta')
         model_saver.restore(sess, tf.train.latest_checkpoint(save_path + ''))
 
         graph = tf.get_default_graph()
@@ -115,20 +115,20 @@ def run():
     run_normal(normal_runs_dir)
     print("Normal : {}".format(timeit.default_timer() - start_time))
 
-    start_time = timeit.default_timer()
-    # run frozen
-    run_altered(freeze_runs_dir)
-    print("Frozen : {}".format(timeit.default_timer() - start_time))
+    # start_time = timeit.default_timer()
+    # # run frozen
+    # run_altered(freeze_runs_dir)
+    # print("Frozen : {}".format(timeit.default_timer() - start_time))
 
-    start_time = timeit.default_timer()
-    # run optimized
-    run_altered(optimize_runs_dir)
-    print("Optimized : {}".format(timeit.default_timer() - start_time))
+    # start_time = timeit.default_timer()
+    # # run optimized
+    # run_altered(optimize_runs_dir)
+    # print("Optimized : {}".format(timeit.default_timer() - start_time))
 
-    start_time = timeit.default_timer()
-    # run 8 bit
-    run_altered(eight_bit_runs_dir)
-    print("8 Bit : {}".format(timeit.default_timer() - start_time))
+    # start_time = timeit.default_timer()
+    # # run 8 bit
+    # run_altered(eight_bit_runs_dir)
+    # print("8 Bit : {}".format(timeit.default_timer() - start_time))
 
 if __name__ == '__main__':
     run()
