@@ -17,7 +17,7 @@ Download the [Kitti Road dataset](http://www.cvlibs.net/datasets/kitti/eval_road
 ### To Start
 
 ##### Run
-Run the following command to run the training and save the initial model and checkpoint for tensorflow:
+Run the following command to run the training and save the initial model and checkpoint for tensorflow. This also creates the first set of inference samples.  The others are not required to get samples.:
 ```
 python main.py
 ```
