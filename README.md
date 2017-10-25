@@ -32,6 +32,21 @@ Run the following command to look at how the various graphs perform on video and
 python video.py
 ```
 
+## Test Environment
+All testing was done on my lab system.
+
+OS : Kubuntu 16.04
+CPU : AMD Threadripper 1950x
+RAM : 32 GB with 15-15-15 latency
+TensorFlow Version: 1.4.0-rc1 (compiled from source)
+GPU : GeForce GTX 1070 major: 6 minor: 1 memoryClockRate(GHz): 1.683
+Total GPU Memory: 7.92GiB
+
+
+## Hyper parameters used
+Epochs : 15
+Batch Size : 5
+
 # Results
 ![Cross Entropy Loss](runs/normal/1508797633.1374235.png?raw=true "Cross Entropy Loss")
 
