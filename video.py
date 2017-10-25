@@ -27,6 +27,7 @@ def run_video(sess, image_input, keep_prob, my_logits, data_dir):
     down_s_vid_size = (576, 160)
     # video_size = (576, 160) #736 720 1280, 736
 
+    # stackoverflow answer https://stackoverflow.com/questions/18954889/how-to-process-images-of-a-video-frame-by-frame-in-video-streaming-using-opencv
     cap = cv2.VideoCapture(video_path)
     while not cap.isOpened():
         cap = cv2.VideoCapture(video_path)
