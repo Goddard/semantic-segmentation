@@ -169,14 +169,3 @@ def plot_loss(runs_dir, loss, folder_name):
 
     output_file = os.path.join(runs_dir, folder_name + ".png")
     plt.savefig(output_file)
-
-def print_num_params(graph):
-  vvars = 0
-  for v in tf.global_variables():
-    vvars += np.prod(v.get_shape().as_list())
-  total_parameters = 0
-  for v in tf.trainable_variables():
-    total_parameters += np.prod(v.get_shape().as_list())
-  print('Total params = %i' % (total_parameters))
-  print('Total vars = %i' % (vvars))
-  print('Total ops = %i' % (len(graph.get_operations())))

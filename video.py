@@ -115,20 +115,20 @@ def run():
     run_normal(normal_runs_dir)
     print("Normal : {}".format(timeit.default_timer() - start_time))
 
-    # start_time = timeit.default_timer()
-    # # run frozen
-    # run_altered(freeze_runs_dir)
-    # print("Frozen : {}".format(timeit.default_timer() - start_time))
+    start_time = timeit.default_timer()
+    # run frozen
+    run_altered(freeze_runs_dir)
+    print("Frozen : {}".format(timeit.default_timer() - start_time))
 
-    # start_time = timeit.default_timer()
-    # # run optimized
-    # run_altered(optimize_runs_dir)
-    # print("Optimized : {}".format(timeit.default_timer() - start_time))
+    start_time = timeit.default_timer()
+    # run optimized
+    run_altered(optimize_runs_dir)
+    print("Optimized : {}".format(timeit.default_timer() - start_time))
 
-    # start_time = timeit.default_timer()
-    # # run 8 bit
-    # run_altered(eight_bit_runs_dir)
-    # print("8 Bit : {}".format(timeit.default_timer() - start_time))
+    start_time = timeit.default_timer()
+    # run 8 bit
+    run_altered(eight_bit_runs_dir)
+    print("8 Bit : {}".format(timeit.default_timer() - start_time))
 
 if __name__ == '__main__':
     run()
